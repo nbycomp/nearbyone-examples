@@ -11,3 +11,6 @@ deployments:
         repo: https://charts.bitnami.com/bitnami
         version: 11.1.5
         name: nginx
+    variables:
+      service: 
+        type: ClusterIP

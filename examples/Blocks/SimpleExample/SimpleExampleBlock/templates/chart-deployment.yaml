@@ -13,3 +13,6 @@ spec:
       version: {{ .Values.deployments.simpleExample.configuration.chart.version }}
       repo:
         url: {{ .Values.deployments.simpleExample.configuration.chart.repo }}
+      values: |
+        service:
+          type: {{ .Values.deployments.simpleExample.variables.service.type }}

@@ -1,0 +1,25 @@
+Block:
+  InstanceId: 12345678-9012-3456-7890-123456789012
+placement:
+  site:
+    label: site01
+
+deployments:
+  simpleExample:
+    configuration:
+      chart:
+        repo: https://charts.bitnami.com/bitnami
+        version: 11.1.5
+        name: nginx
+    variables:
+      greetings:
+        - lang: catalan
+          greeting:	Hola món!
+        - lang: english
+          greeting:	Hello World!
+        - lang: french
+          greeting:	Bonjour monde!
+        - lang: german
+          greeting:	Hallo Welt!
+        - lang: spanish
+          greeting: Hola Mundo!

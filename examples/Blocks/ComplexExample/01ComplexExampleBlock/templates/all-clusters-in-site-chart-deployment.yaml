@@ -1,0 +1,33 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: {{ .Values.deployments.complexExample.variables.appname }}
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  connectionListSelectors:
+    k8sClustersInSite:
+      matchLabels:
+        site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+        kind: K8sCluster
+  onePerConnectionKey: k8sClustersInSite
+  template:
+    metadata:
+      labels:
+        application: {{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}
+    spec:
+      k8sClusterName: "{{`{{ .Connections.k8sClustersInSite.clusterName }}`}}"
+      chart: {{ .Values.deployments.complexExample.configuration.chart.name }}
+      version: {{ .Values.deployments.complexExample.configuration.chart.version }}
+      repo:
+        url: {{ .Values.deployments.complexExample.configuration.chart.repo }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            location / {
+              return 200 "hello World! nginx chart release running in {{`{{ .Connections.k8sClustersInSite.clusterName }}`}}";
+            }
+          }

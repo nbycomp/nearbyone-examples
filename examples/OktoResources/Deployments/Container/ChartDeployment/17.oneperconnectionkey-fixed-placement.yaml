@@ -1,0 +1,29 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: nginx-deployment
+  namespace: 12345678-9012-3456-7890-123456789012
+spec:
+  connectionListSelectors:
+    placement:
+      matchLabels:
+        kind: placement
+  onePerConnectionKey: placement
+  template:
+    metadata:
+      labels:
+        application: nginx-sample-application
+    spec:
+      k8sClusterName: "{{`{{ .Connections.placement.k8sClusterName }}`}}"
+      chart: nginx
+      repo:
+        url: https://charts.bitnami.com/bitnami
+      version: 11.1.5
+      values: |
+        service:
+          type: NodePort
+          port: 80
+          httpsPort: 443
+          nodePorts:
+            http: "31080"
+            https: "31443"

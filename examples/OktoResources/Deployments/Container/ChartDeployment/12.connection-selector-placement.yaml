@@ -10,7 +10,6 @@ spec:
         application: another-sample-application
         kind: placement
       limit: 1
-  strictRenderKeys: true
   template:
     metadata:
       labels:

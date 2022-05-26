@@ -9,4 +9,4 @@ spec:
       kind: K8sCluster
   spec:
     value: |
-      clusterName: {{`{{ .Target.metadata.name }}`}}
+      clusterName: cluster-a

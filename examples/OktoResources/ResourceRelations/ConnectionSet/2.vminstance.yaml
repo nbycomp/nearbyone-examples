@@ -14,4 +14,4 @@ spec:
         kind: VMInstance
     spec:
       value: |
-        connectionInfo: any value here
+        clusterName: {{`{{ .Target.spec.vmClusterName }}`}}

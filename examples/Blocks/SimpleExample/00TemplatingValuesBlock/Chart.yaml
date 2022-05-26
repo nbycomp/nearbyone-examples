@@ -1,6 +1,6 @@
 apiVersion: v2
-name: SimpleExample
-description: "SimpleExample Block shows the templating basics by deploying an nginx chart release"
+name: SimpleExampleTemplatingValues
+description: "SimpleExampleTemplatingValues Block shows the templating values basics by deploying an nginx chart release"
 type: application
 version: 0.0.1
 appVersion: 1.0.0
@@ -15,4 +15,4 @@ icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
 deprecated: false
 annotations:
   vendor: Nearby Computing
-  displayName: 00 SimpleExample Templating Basics
+  displayName: 00 SimpleExample Templating Values Basics

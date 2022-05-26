@@ -1,0 +1,40 @@
+# STEP 4
+# This ChartDeployment manifest deploys an instance of phase2 ChartRelease alongside each
+# monitoring chartRelease we have deployed in phase1-chart-deployment.yaml manifest.
+# By matching the label we used in phase1-ready-connectionset.yaml manifest, we get all the connections pointing to each of the phase1 chart releases.
+# we name these connections `phase1Releases` and use the `onePerConnectionKey: phase1Releases` to create
+# one instance of the template for each connection. Then we use `.Connections.phase1Releases.cluster` to get the
+# cluster name where we want to deploy this chart and `.Connections.phase1Releases.name`
+# to find the service we want to target
+
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: phase2-{{ .Values.deployments.complexExample.variables.appname }}
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  connectionListSelectors:
+    phase1Releases:
+      matchLabels:
+        application: ready-phase1-{{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}
+  onePerConnectionKey: phase1Releases
+  template:
+    spec:
+      k8sClusterName: "{{`{{ .Connections.phase1Releases.cluster }}`}}"
+      chart: {{ .Values.deployments.complexExample.configuration.chart.name }}
+      version: {{ .Values.deployments.complexExample.configuration.chart.version }}
+      repo:
+        url: {{ .Values.deployments.complexExample.configuration.chart.repo }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            location / {
+              return 200 "hello World! Phase2 nginx chart release running,
+               deployed in the same cluster as Phase1 nginx chart release
+               that was created at {{`{{ .Connections.phase1Releases.createdAt }}`}}";
+            }
+          }

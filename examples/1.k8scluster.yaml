@@ -1,0 +1,12 @@
+kind: K8sCluster
+metadata:
+  labels:
+    site.nbycomp.com/b8caddf5-73f4-4ccd-98cf-e8c2c64a4f2a: "true"
+    site.nbycomp.com/f64193a2-32b6-4c6b-a668-a0e6394ae9a9: "true"
+    site.nbycomp.com/site01: "true"
+  name: b0ff2cb6-8302-4530-a929-aedd7b1ff33e
+spec:
+  kubeConfig:
+    secretKeyRef:
+      key: kubeconfig
+      name: kubeconfig-b0ff2cb6-8302-4530-a929-aedd7b1ff33e

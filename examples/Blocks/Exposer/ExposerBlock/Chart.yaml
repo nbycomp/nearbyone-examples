@@ -1,0 +1,19 @@
+apiVersion: v2
+name: ExposerBlock
+description: "This block shows how to use different techinques to be able to deploy a helm sidecar
+  in the same cluster where another helm is already running and expose one of its services in every managed cluster"
+type: application
+version: 0.0.1
+appVersion: 1.0.0
+maintainers:
+  - name: Oscar Trullols
+    email: otrullols@nearbycomputing.com
+    url: www.nearbycomputing.com
+keywords:
+# categories
+  - Examples
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
+deprecated: false
+annotations:
+  vendor: Nearby Computing
+  displayName: Exposer Service Federation

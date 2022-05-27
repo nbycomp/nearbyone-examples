@@ -1,0 +1,487 @@
+# STEP 2
+# This ChartDeployment manifest deploys the k8s-monitoring chart at each of the k8s-clusters in a Site.
+
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: {{ .Values.deployments.kubernetes.variables.appname }}
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  connectionListSelectors:
+    # the `k8sClustersInSite` connectionListSelector obtains all the connections matching the `site` label
+    k8sClustersInSite:
+      matchLabels:
+        site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+
+  # `onePerConnectionKey` creates a chart release for each of the connections found in the connectionListSelector.
+  # Notice that without `onePerConnectionKey`, it would return a list of connections available to be used in
+  # a single instance the chartRelease's template.
+  onePerConnectionKey: k8sClustersInSite
+  template:
+    metadata:
+      labels:
+        application: {{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}
+    spec:
+      k8sClusterName: "{{`{{ .Connections.k8sClustersInSite.clusterName }}`}}"
+      chart: {{ .Values.deployments.kubernetes.configuration.chart.name }}
+      version: {{ .Values.deployments.kubernetes.configuration.chart.version }}
+      repo:
+        url: {{ .Values.deployments.kubernetes.configuration.chart.repo }}
+      values: |
+        alerta:
+          enabled: {{ .Values.deployments.kubernetes.variables.alerta.enabled }}
+          replicaCount: 1
+          image:
+            repository: {{ .Values.deployments.kubernetes.variables.alerta.image.name }}
+            tag: {{ .Values.deployments.kubernetes.variables.alerta.image.tag }}
+            pullPolicy: IfNotPresent
+          service:
+            type: ClusterIP
+            port: {{ .Values.deployments.kubernetes.variables.alerta.service.port }}
+          ingress:
+            enabled: false
+            apiVersion: networking.k8s.io/v1beta1
+            annotations:
+              kubernetes.io/ingress.class: nginx
+              kubernetes.io/tls-acme: "true"
+            path: /alerta/api
+            hosts:
+              - localhost
+          alertaAdminPassword: {{ .Values.deployments.kubernetes.variables.alerta.admin.password }}
+          alertaAdminUsers:
+            - "{{ .Values.deployments.kubernetes.variables.alerta.admin.user }}"
+          postgresql:
+            enabled: true
+            postgresqlUsername: alerta
+            postgresqlDatabase: monitoring
+            postgresqlPassword: alerta
+            persistence:
+              enabled: {{ .Values.deployments.kubernetes.variables.alerta.postgresql.persistence.enabled }}
+              size: {{ .Values.deployments.kubernetes.variables.alerta.postgresql.persistence.size }}
+
+          alertaInstallPlugins:
+            - remote_ip
+            - reject
+            - heartbeat
+            - blackout
+            - prometheus
+
+          alertaConfig:
+            DEBUG: "True"
+            AUTH_REQUIRED: "True"
+            USE_PROXYFIX: "True"
+            PLUGINS: "['remote_ip', 'reject', 'heartbeat', 'blackout', 'prometheus']"
+            DEFAULT_FILTER: "{'status':['open','ack','closed']}"
+            COLUMNS: "['severity','status','lastReceiveTime','duplicateCount','event',
+              'value', 'resource','link', 'text']"
+            ALLOWED_ENVIRONMENTS: "['Production']"
+            ASI_QUERIES: "[
+              {'text': 'ALL', 'query': [['environment', 'Production']]},
+              {'text': 'Latencies', 'query': 'group=Latencies'},
+              {'text': 'Resource Consumption', 'query': 'group=ResourceConsumption'},
+              {'text': 'Assets', 'query': 'group=ResourceStatus'},
+              {'text': 'Services', 'query': 'group=ServiceStatus'}
+              ]"
+            COLOR_MAP: "{
+              'severity': {
+              'critical': '#ef8686',
+              'warning': '#efb57d',
+              'normal': '#8ec986',
+              },
+              'text': 'black',
+              'highlight': 'skyblue'
+              }"
+            ASI_SEVERITY: "['critical', 'warning', 'normal' ]"
+            DATE_FORMAT_LONG_DATE: "'DD/M/yyyy h:mm:ss z'"
+            DATE_FORMAT_MEDIUM_DATE: "'DD/MM HH:mm:ss'"
+        grafana:
+          enabled: {{ .Values.deployments.kubernetes.variables.grafana.enabled }}
+          image:
+            repository: {{ .Values.deployments.kubernetes.variables.grafana.image.name }}
+            tag: {{ .Values.deployments.kubernetes.variables.grafana.image.tag }}
+          adminUser: {{ .Values.deployments.kubernetes.variables.grafana.admin.user }}
+          adminPassword: {{ .Values.deployments.kubernetes.variables.grafana.admin.password }}
+          grafana.ini:
+            paths:
+              data: /var/lib/grafana/
+              logs: /var/log/grafana
+              plugins: /var/lib/grafana/plugins
+              provisioning: /etc/grafana/provisioning
+          dashboardProviders:
+            dashboardproviders.yaml:
+              apiVersion: 1
+              providers:
+                - name: "default"
+                  orgId: 1
+                  folder: ""
+                  type: file
+                  disableDeletion: false
+                  editable: true
+                  options:
+                    path: /var/lib/grafana/dashboards/default
+          service:
+            type: {{ .Values.deployments.kubernetes.variables.grafana.service.type }}
+            port: {{ .Values.deployments.kubernetes.variables.grafana.service.port }}
+            nodePort: {{ .Values.deployments.kubernetes.variables.grafana.service.nodePort }}
+          dashboardsConfigMaps:
+            default: "grafana-dashboards-default"
+        prometheus:
+          enabled: {{ .Values.deployments.kubernetes.variables.prometheus.enabled }}
+          serviceAccounts:
+            alertmanager:
+              create: {{ .Values.deployments.kubernetes.variables.prometheus.services.alertmanager.enabled }}
+            nodeExporter:
+              create: {{ .Values.deployments.kubernetes.variables.prometheus.services.nodeExporter.enabled }}
+            pushgateway:
+              create: {{ .Values.deployments.kubernetes.variables.prometheus.services.pushgateway.enabled }}
+            kubeStateMetrics:
+              enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.kubeStateMetrics.enabled }}
+            server:
+              create: {{ .Values.deployments.kubernetes.variables.prometheus.services.server.enabled }}
+          alertmanager:
+            enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.alertmanager.enabled }}
+            persistentVolume:
+              enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.alertmanager.persistentVolume.enabled }}
+          kubeStateMetrics:
+            enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.kubeStateMetrics.enabled }}
+          nodeExporter:
+            enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.nodeExporter.enabled }}
+            image:
+              repository: {{ .Values.deployments.kubernetes.variables.prometheus.services.nodeExporter.image.repository }}
+              tag: {{ .Values.deployments.kubernetes.variables.prometheus.services.nodeExporter.image.tag }}
+          server:
+            enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.server.enabled }}
+            persistentVolume:
+              enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.server.persistentVolume.enabled }}
+            image:
+              repository: {{ .Values.deployments.kubernetes.variables.prometheus.services.server.image.repository }}
+              tag: {{ .Values.deployments.kubernetes.variables.prometheus.services.server.image.tag }}
+          pushgateway:
+            enabled: {{ .Values.deployments.kubernetes.variables.prometheus.services.pushgateway.enabled }}
+            image:
+              repository: {{ .Values.deployments.kubernetes.variables.prometheus.services.pushgateway.image.repository }}
+              tag: {{ .Values.deployments.kubernetes.variables.prometheus.services.pushgateway.image.tag }}
+          alertmanagerFiles:
+            alertmanager.yml:
+              global: {}
+              receivers:
+                - name: "alerta"
+                  webhook_configs:
+                    - url: "http://telemetry-alerta:8080/api/webhooks/prometheus"
+                      send_resolved: true
+                      http_config:
+                        basic_auth:
+                          username: {{ .Values.deployments.kubernetes.variables.alerta.admin.user }}
+                          password: {{ .Values.deployments.kubernetes.variables.alerta.admin.password }}
+              route:
+                group_wait: 5s
+                group_interval: 5s
+                receiver: alerta
+                repeat_interval: 5m
+          serverFiles:
+            alerting_rules.yml:
+              groups:
+                - name: ./rules.conf
+                  rules:
+                    - alert: CPUVeryHigh
+                      expr: >-
+                        100 - (avg by (instance) (rate(node_cpu_seconds_total
+                          {job="node-exporter",mode="idle"}[1m]
+                          )) * 100) >= 90
+                      labels:
+                        severity: critical
+                        correlate: CPUNormal,CPUHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Very High CPU usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current CPU usage > 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                          {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: CPUHigh
+                      expr: >-
+                        (100 - (avg by (instance) (rate(node_cpu_seconds_total
+                          {job="node-exporter",mode="idle"}[1m])) * 100) >= 70) and
+                        (100 - (avg by (instance) (rate(node_cpu_seconds_total
+                          {job="node-exporter",mode="idle"}[1m])) * 100) > 70)
+                      labels:
+                        severity: warning
+                        correlate: CPUNormal,CPUVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "High CPU usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current CPU usage between 70 and 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: CPUNormal
+                      expr: >-
+                        (100 - (avg by (instance) (rate(node_cpu_seconds_total
+                          {job="node-exporter",mode="idle"}[1m])) * 100) < 70)
+                      for: 1m
+                      labels:
+                        severity: normal
+                        correlate: CPUHigh,CPUVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Normal CPU usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current CPU usage < 70%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}"  }}/overview">link</a>
+                    - alert: SystemLoadVeryHigh
+                      expr: >-
+                        label_replace((node_load5 / on(instance) (count by (instance)
+                          (rate(node_cpu_seconds_total{mode="idle"}[1m]))) * 100) >= 90,
+                          "instance", "$1", "instance","(.*):.*")
+                      for: 1m
+                      labels:
+                        severity: critical
+                        correlate: SystemLoadNormal,SystemLoadHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Very High system usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current system usage > 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: SystemLoadHigh
+                      expr: >-
+                        label_replace((node_load5 / on(instance) (count by (instance)
+                          (rate(node_cpu_seconds_total{mode="idle"}[1m]))) * 100) >= 70,
+                          "instance", "$1", "instance","(.*):.*")
+                          and label_replace((node_load5 / on(instance)
+                          (count by (instance)
+                          (rate(node_cpu_seconds_total{mode="idle"}[1m]))) * 100) < 90,
+                          "instance", "$1", "instance","(.*):.*")
+                      for: 1m
+                      labels:
+                        severity: warning
+                        correlate: SystemLoadNormal,SystemLoadVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "High system usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current system usage between 70 and 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: SystemLoadNormal
+                      expr: >-
+                        label_replace((node_load5 / on(instance) (count by (instance)
+                          (rate(node_cpu_seconds_total{mode="idle"}[1m]))) * 100) < 70,
+                          "instance", "$1", "instance","(.*):.*")
+                      for: 1m
+                      labels:
+                        severity: normal
+                        correlate: SystemLoadHigh,SystemLoadVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Normal system usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current system usage < 70%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                          {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: MEMVeryHigh
+                      expr: >-
+                        (1-((node_memory_MemFree_bytes)/node_memory_MemTotal_bytes)
+                          )*100 >= 90
+                      for: 1m
+                      labels:
+                        severity: critical
+                        correlate: MEMNormal,MEMHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Very High MEM usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current MEM usage > 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: MEMHigh
+                      expr: >-
+                        ((1-((node_memory_MemFree_bytes)/node_memory_MemTotal_bytes)
+                          )*100 >= 70) and ((1-(
+                          (node_memory_MemFree_bytes)/node_memory_MemTotal_bytes)
+                          )*100 < 90)
+                      for: 1m
+                      labels:
+                        severity: warning
+                        correlate: MEMNormal,MEMVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "High MEM usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current MEM usage between 70 and 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: MEMNormal
+                      expr: >-
+                        (1-((node_memory_MemFree_bytes)/node_memory_MemTotal_bytes)
+                          )*100 < 70
+                      for: 1m
+                      labels:
+                        severity: normal
+                        correlate: MEMHigh,MEMVeryHigh
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Normal MEM usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current MEM usage < 70%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: VeryHighDiskUsage
+                      expr: >-
+                        100 - ((sum(node_filesystem_avail_bytes)/
+                          sum(node_filesystem_size_bytes)) * 100) >= 90
+                      for: 1m
+                      labels:
+                        severity: warning
+                        correlate: NormalDiskUsage,HighDiskUsage
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Very high disk usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current disk usage >= 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: HighDiskUsage
+                      expr: >-
+                        (100 - ((sum(node_filesystem_avail_bytes)/
+                          sum(node_filesystem_size_bytes)) * 100)) >= 70 and (100 -
+                          ((sum(node_filesystem_avail_bytes)/
+                          sum(node_filesystem_size_bytes)) * 100) < 90)
+                      for: 1m
+                      labels:
+                        severity: warning
+                        correlate: NormalDiskUsage,VeryHighDiskUsage
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "High disk usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current disk usage between 70 and 90%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: NormalDiskUsage
+                      expr: >-
+                        100 - ((sum(node_filesystem_avail_bytes)/
+                          sum(node_filesystem_size_bytes)) * 100) < 70
+                      for: 1m
+                      labels:
+                        severity: normal
+                        correlate: HighDiskUsage,VeryHighDiskUsage
+                        group: ResourceConsumption
+                      annotations:
+                        summary: "Normal disk usage"
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        description: "Current disk usage < 70%"
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: NodeMissing
+                      expr: >-
+                        kube_node_status_condition{condition="Ready",status="false"}==1
+                      for: 10s
+                      labels:
+                        severity: critical
+                        correlate: NodePresent,NodeUnknown
+                        group: ResourceStatus
+                      annotations:
+                        value: "unreachable"
+                        summary: |
+                          Node connectivity lost
+                        description: |
+                          Node unreachable
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: NodePresent
+                      expr: >-
+                        kube_node_status_condition{condition="Ready",status="true"}==1
+                      for: 10s
+                      labels:
+                        severity: normal
+                        correlate: NodeMissing,NodeUnknown
+                        group: ResourceStatus
+                      annotations:
+                        value: "up"
+                        summary: |
+                          Node connectivity stable
+                        description: |
+                          Node reachable
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: NodeUnknown
+                      expr: >-
+                        kube_node_status_condition{
+                          condition="Ready",status="unknown"}==1
+                      for: 10s
+                      labels:
+                        severity: critical
+                        correlate: NodePresent,NodeMissing
+                        group: ResourceStatus
+                      annotations:
+                        value: "unreachable"
+                        summary: |
+                          Node connectivity lost
+                        description: |
+                          Node unreachable
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.instance }}`}}" }}/overview">link</a>
+                    - alert: NetworkInterfaceErrors
+                      expr: >-
+                        ((node_network_transmit_errs_total offset 5m)+
+                          (node_network_receive_errs_total offset 5m)) > 0
+                      for: 10s
+                      labels:
+                        severity: critical
+                        correlate: NoNetworkInterfaceErrors
+                        group: ResourceStatus
+                      annotations:
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        summary: |
+                          Server Fan abnormal operation
+                        description: |
+                          Server Fan Stopped
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+                    - alert: NoNetworkInterfaceErrors
+                      expr: >-
+                        ((node_network_transmit_errs_total offset 5m)+
+                          (node_network_receive_errs_total offset 5m)) == 0
+                      for: 10s
+                      labels:
+                        severity: normal
+                        correlate: NetworkInterfaceErrors
+                        group: ResourceStatus
+                      annotations:
+                        value: {{ print "{{`{{ $value }}`}}" | quote }}
+                        summary: |
+                          No Network Interface RX/TX errors
+                        description: |
+                          No Network Interface RX/TX errors
+                        link: >-
+                          <a target="_blank" href="/app/infrastructure/view/device/
+                            {{ print "{{`{{ $labels.exported_instance }}`}}" }}/overview">link</a>
+        postgresql:
+          enabled: true
+          postgresqlUsername: alerta
+          postgresqlDatabase: monitoring
+          postgresqlPassword: password
+          persistence:
+            enabled: {{ .Values.deployments.kubernetes.variables.alerta.postgresql.persistence.enabled }}
+            size: {{ .Values.deployments.kubernetes.variables.alerta.postgresql.persistence.size }}
+        cloudprober:
+          {{- toYaml .Values.deployments.kubernetes.variables.cloudprober | nindent 10 }}

@@ -1,0 +1,40 @@
+# STEP 4
+# This ChartDeployment manifest deploys an instance of exposer ChartRelease alongside each
+# monitoring chartRelease we have deployed in STEP 2.
+# The chart creates an skupper service at the controller (and every other cluster that has joined the skupper mesh),
+# pointing to the prometheus service deployed by the chartrelease in STEP 2.
+# this will allow us in STEP 5 to create a connection publishing that service so other blocks can use it.
+# How it works:
+# By matching the label we used in STEP 3, we get all the connections pointing to each of the monitoring chart releases.
+# we name these connections `k8sSkupperService` and use the `onePerConnectionKey: k8sSkupperService` to create
+# one instance of the template for each connection. Then we use `.Connections.k8sSkupperService.cluster` to get the
+# cluster name where we want to deploy this chart and `.Connections.k8sSkupperService.name`
+# to find the service we want to target
+
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: exposer-{{ .Values.deployments.kubernetes.variables.appname }}
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  connectionListSelectors:
+    k8sSkupperService:
+      matchLabels:
+        application: skupp-{{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId  }}
+  onePerConnectionKey: k8sSkupperService
+  template:
+    metadata:
+      labels:
+        application: exp-{{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}
+    spec:
+      k8sClusterName: "{{`{{ .Connections.k8sSkupperService.cluster }}`}}"
+      chart: exposer
+      repo:
+        url: https://registry.nearbycomputing.com/chartrepo/apps
+      values: |
+        targetedService:
+          name: {{`{{ .Connections.k8sSkupperService.targetedServiceName }}`}}
+          namespace: {{ .Values.Block.InstanceId }}
+        skupperService:
+          enabled: true
+          exposedName: {{`{{ .Connections.k8sSkupperService.exposedServiceName }}`}}

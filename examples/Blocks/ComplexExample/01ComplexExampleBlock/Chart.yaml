@@ -1,0 +1,19 @@
+apiVersion: v2
+name: ComplexExample01
+description: "ComplexExample01 Block shows how to use a ConnectionSet pointing to k8sClusters with specific labels (e.g. a site)
+ to deploy a chart release on each of them"
+type: application
+version: 0.0.1
+appVersion: 1.0.0
+maintainers:
+  - name: Oscar Trullols
+    email: otrullols@nearbycomputing.com
+    url: www.nearbycomputing.com
+keywords:
+# categories
+  - Examples
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
+deprecated: false
+annotations:
+  vendor: Nearby Computing
+  displayName: 01 ComplexExample Deploy on every cluster in Site

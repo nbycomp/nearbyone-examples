@@ -1,0 +1,28 @@
+#  This manifest defines a ConnectionSet that will create a Connection for each
+# ChartRelease that has a label matching `application: {{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}`
+#  (as the one defined in `./phase1-chart-deployment.yaml` manifest)
+# For each of these ChartReleases, the connection stores its name and the k8sClusterName where the chart is deployed,
+# and labels itself with `application: skupp-{{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}`
+# This will allow us to create a ChartDeployment with a connectionListSelector matching that label
+#  (see full example at `./phase2-chart-deployment.yaml`)
+# and use the connection.cluster to deploy other charts at the same place where the connection chart points to.
+
+apiVersion: blocks/v1beta1
+kind: ConnectionSet
+metadata:
+  name: ready-rel-{{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}
+spec:
+  targetListSelector:
+    kind: ChartRelease
+    matchLabels:
+      application: {{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}
+  template:
+    metadata:
+      labels:
+        # This label is used by `phase2-chart-deployment.yaml`
+        application: ready-phase1-{{ .Values.deployments.complexExample.variables.appname }}-{{ .Values.Block.InstanceId }}
+    spec:
+      value: |
+        name: {{`{{ .Target.metadata.name }}`}}
+        cluster: {{`{{ .Target.spec.k8sClusterName }}`}}
+        createdAt: {{`{{ .Target.metadata.creationTimestamp }}`}}

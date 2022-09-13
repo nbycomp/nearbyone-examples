@@ -1,0 +1,41 @@
+# Resource examples:
+
+- Okto Resources:
+  - Deployments:
+    - Container environments:
+      - ChartRelease:
+        - 0.basic.yaml: static target cluster, static deployment
+      - ChartDeployment:
+        - 0.basic.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
+        - 1.k8sclusterselector.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
+        - X.kpiplacement.yaml
+    - VM environments:
+      - VMInstance:
+        - 0.basic.yaml: static target cluster, static deployment
+      - VMDeployment
+        - 0.basic.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
+        - 1.k8sclusterselector.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
+  - Resource relations:
+    - Connection:
+      - 0.basic.yaml
+    - ConnectionSet:
+      - 0.k8scluster.yaml
+      - 1.chartrelease.yaml
+      - 2.vminstance.yaml
+- Blocks:
+  - SimpleExample: templating basics
+  - ComplexExample: Dependencies among deployments
+  - Exposer: Service federation
+  - Telemetry:
+    - Simple Telemetry
+    - Federated telemetry
+  - REST:
+    - Simple
+    - Advanced
+  - Infrastructure:
+    - Provisioning stages:
+      - Ansible/Redfish
+      - Baremetal descriptor
+      - Ansible Software
+      - Post actions: join
+    - All in One (AIO)

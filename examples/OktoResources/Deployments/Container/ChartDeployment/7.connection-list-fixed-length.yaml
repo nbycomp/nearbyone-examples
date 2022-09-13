@@ -1,0 +1,30 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: prometheus-deployment
+  namespace: 12345678-9012-3456-7890-123456789012
+spec:
+  connectionListSelectors:
+    rules:
+      matchLabels:
+        application: prometheus
+        config: rule
+      required: 5
+      limit: 5
+  template:
+    metadata:
+      labels:
+        application: prometheus
+    spec:
+      k8sClusterSelector:
+        matchLabels:
+          site.nbycomp.com/customerSiteA: "true"
+      chart: kube-prometheus-stack
+      repo:
+        url: https://charts.bitnami.com/bitnami
+      version: 35.3.1
+      values: |
+        additionalPrometheusRules:
+          {{`{{- range .Connection.rules }}`}}
+            - {{`{{ .rule }}`}}
+          {{`{{- end }}`}}

@@ -1,0 +1,36 @@
+apiVersion: blocks/v1beta1
+kind: ChartRelease
+metadata:
+  name: nginx-deployment-6nchd
+  namespace: 12345678-9012-3456-7890-123456789012
+spec:
+  k8sClusterSelector:
+    weightsQuery:
+      selection:
+        prometheus:
+          query: |-
+            (avg by (instance) 
+              (rate(node_cpu_seconds_total{job="node",mode="idle"}[1m])) * 100)
+            > 70
+          targetLabel: instance
+          address: "prometheus.example.com:9090"
+      selectionAndConfirmation:
+        prometheus:
+          query: |-
+            (avg by (instance) 
+              (rate(node_cpu_seconds_total{job="node",mode="idle"}[1m])) * 100)
+            > 40
+          targetLabel: instance
+          address: "prometheus.example.com:9090"
+  chart: nginx
+  repo:
+    url: https://charts.bitnami.com/bitnami
+  version: 11.1.5
+  values: |
+    service:
+      type: NodePort
+      port: 80
+      httpsPort: 443
+      nodePorts:
+        http: "31080"
+        https: "31443"

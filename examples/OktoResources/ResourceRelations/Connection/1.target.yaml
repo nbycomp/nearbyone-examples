@@ -8,6 +8,9 @@ spec:
       site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
       kind: K8sCluster
   spec:
+    targetReference: 
+      kind: ChartRelease
+      name: nginx-deployment-6nchd
+      namespace: 12345678-9012-3456-7890-123456789012
     value: |
-      clusterName: cluster-a
-
+      clusterName: {{`{{ .Target.spec.k8sClusterName }}`}}

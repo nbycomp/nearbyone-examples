@@ -1,0 +1,18 @@
+apiVersion: v2
+name: SimpleExampleFlowControlRange
+description: "SimpleExampleFlowControlRange Block demonstrates templating basics iterating ranges"
+type: application
+version: 0.0.1
+appVersion: 1.0.0
+maintainers:
+  - name: Oscar Trullols
+    email: otrullols@nearbycomputing.com
+    url: www.nearbycomputing.com
+keywords:
+# categories
+  - Examples
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
+deprecated: false
+annotations:
+  vendor: Nearby Computing
+  displayName: 02 SimpleExample Flow Control Ranges Basics

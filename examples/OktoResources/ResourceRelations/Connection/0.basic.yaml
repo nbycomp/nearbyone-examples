@@ -10,3 +10,4 @@ spec:
   spec:
     value: |
       clusterName: cluster-a
+

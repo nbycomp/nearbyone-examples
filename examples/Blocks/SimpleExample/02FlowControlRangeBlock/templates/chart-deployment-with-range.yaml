@@ -1,0 +1,28 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: nginx-deployment
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  template:
+    spec:
+      k8sClusterSelector:
+        matchLabels:
+          site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+      chart: {{ .Values.deployments.simpleExample.configuration.chart.name }}
+      version: {{ .Values.deployments.simpleExample.configuration.chart.version }}
+      repo:
+        url: {{ .Values.deployments.simpleExample.configuration.chart.repo }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            {{- range $k, $v := .Values.deployments.simpleExample.variables.greetings   }}
+            location /{{ $v.lang }} {
+              return 200 " {{ $v.greeting}} ";
+            }
+            {{- end }}    
+          }

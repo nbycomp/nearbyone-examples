@@ -1,0 +1,43 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: nginx-deployment
+  namespace: {{ .Values.Block.InstanceId }}
+spec:
+  template:
+    spec:
+      k8sClusterSelector:
+        matchLabels:
+          site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+      chart: {{ .Values.deployments.simpleExample.configuration.chart.name }}
+      version: {{ .Values.deployments.simpleExample.configuration.chart.version }}
+      repo:
+        url: {{ .Values.deployments.simpleExample.configuration.chart.repo }}
+      {{- if  eq .Values.deployments.simpleExample.variables.addPredefinedValues "defaultValues" }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            location / {
+              return 200 "hello World! Deployed with predefined values ";
+            }
+          }
+      {{- else if  eq .Values.deployments.simpleExample.variables.addPredefinedValues "planB" }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            location / {
+              return 200 "hello World! Deployed with planB Values ";
+            }
+          }
+      {{ else }}
+        # no 'values' dict is sent to the chart release
+      {{- end }}
+      

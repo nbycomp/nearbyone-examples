@@ -1,0 +1,34 @@
+# STEP 3
+#  This manifest defines a ConnectionSet that will create a Connection for each
+# ChartRelease that has a label matching `application: {{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}`
+#  (as the one we defined in `./kubernetes-deployment.yaml` in the previous "STEP 2")
+# For each of these ChartReleases, the connection stores its name, the k8sClusterName where the chart is deployed and the
+# prometheus service that is being created and exposed by the chart. (it will only be available after the exposer chart has been deployed)
+# and labels itself with `application: skupp-{{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}`
+# This will allow us to create a ChartDeployment with a connectionListSelector matching that label
+#  (see full example at `./kubernetes-exposer-deployment.yaml`)
+# and use the connection.cluster to deploy other charts at the same place where the connection chart points to.
+
+apiVersion: blocks/v1beta1
+kind: ConnectionSet
+metadata:
+  name: skupp-{{ .Values.Block.InstanceId }}
+spec:
+  targetListSelector:
+    kind: ChartRelease
+    matchLabels:
+      application: {{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}
+  template:
+    metadata:
+      labels:
+        # This label is used by `kubernetes-exposer-deployment.yaml`
+        application: skupp-{{ .Values.deployments.kubernetes.variables.appname }}-{{ .Values.Block.InstanceId }}
+        # these labels can be used from the TelemetryAggregatorBlock to federate prometheus.
+        serviceChainId: {{ .Release.Name }}
+        kind: prometheusEndpoint
+    spec:
+      value: |
+        targetedServiceName: {{`{{ .Target.metadata.name }}`}}-prometheus-server
+        cluster: {{`{{ .Target.spec.k8sClusterName }}`}}
+        exposedServiceName: prom-{{`{{ .Target.spec.k8sClusterName }}`}}
+        prometheus: prom-{{`{{ .Target.spec.k8sClusterName }}`}}.nearbyone-agents:80

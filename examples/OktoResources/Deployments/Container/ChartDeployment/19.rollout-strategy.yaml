@@ -1,0 +1,31 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: nginx-deployment
+  namespace: 12345678-9012-3456-7890-123456789012
+spec:
+  template:
+    metadata:
+      labels:
+        application: nginx-sample-application
+    spec:
+      chart: nginx
+      k8sClusterSelector:
+        matchLabels:
+          site.nbycomp.com/customerSiteA: "true"
+      repo:
+        url: https://charts.bitnami.com/bitnami
+      version: 11.1
+      rolloutStrategy:
+        crontab:
+          - schedule: "0 3 * * *"
+            timeZone: UTC
+        startingDeadlineSeconds: 60
+      values: |
+        service:
+          type: NodePort
+          port: 80
+          httpsPort: 443
+          nodePorts:
+            http: "31080"
+            https: "31443"

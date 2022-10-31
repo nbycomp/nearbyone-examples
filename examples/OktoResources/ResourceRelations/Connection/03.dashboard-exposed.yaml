@@ -1,12 +1,12 @@
 apiVersion: blocks/v1beta1
 kind: Connection
 metadata:
-  name: k8sclusters-site-{{ .Values.placement.site.label }}
+  name: exposed-dashboard-{{ .Values.Block.InstanceId }}
+  namespace: {{ .Values.Block.InstanceId }}
   labels:
-    site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
-    connection.nbycomp.com/kind: url
-    connection.nbycomp.com/category: dashboard
+    connection.nbycomp.com/kind: URL
+    connection.nbycomp.com/category: Dashboard
     connection.nbycomp.com/entity-type: block
-    connection.nbycomp.com/entity: 12345678-9012-3456-7890-123456789012
+    connection.nbycomp.com/entity: {{ .Values.Block.InstanceId }}
 spec:
   value: http://dashboard.chartreleaseid:8080

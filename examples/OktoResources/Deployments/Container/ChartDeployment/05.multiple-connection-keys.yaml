@@ -34,4 +34,4 @@ spec:
           httpsPort: 443
           nodePorts:
             http: {{`{{ .Connections.nodePortHttp.port }}`}}
-            https: {{`{{ .Connections.nodePortsHttps.port }}`}}
+            https: {{`{{ .Connections.nodePortHttps.port }}`}}

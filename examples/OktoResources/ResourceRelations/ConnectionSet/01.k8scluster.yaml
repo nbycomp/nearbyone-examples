@@ -14,4 +14,4 @@ spec:
         kind: K8sCluster
     spec:
       value: |
-        connectionInfo: any value here
+        clusterName: {{`{{ .Target.spec.k8sClusterName }}`}}

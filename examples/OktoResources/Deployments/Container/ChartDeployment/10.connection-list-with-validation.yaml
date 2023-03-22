@@ -1,0 +1,43 @@
+apiVersion: blocks/v1beta1
+kind: ChartDeployment
+metadata:
+  name: nginx-deployment
+  namespace: {{ .Values.Block.InstanceId }}
+  labels:
+    application: nginx-sample-application
+  
+spec:
+  connectionListSelectors:
+    k8sClusters:
+      matchLabels:
+        site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+        kind: K8sCluster
+      validator:
+        jsonSchema:
+          "$schema": http://json-schema.org/draft-07/schema#
+          type: object 
+          description: A fancy description
+          properties:
+            cluster:
+              type: string
+          required: 
+          - cluster
+  onePerConnectionKey: k8sClusters
+  template:
+    spec:
+      k8sClusterName: "{{`{{ .Connections.k8sClusters.cluster }}`}}"
+      chart: {{ .Values.deployments.nginxService.configuration.chart.name }}
+      repo:
+        url: {{ .Values.deployments.nginxService.configuration.chart.repo }}
+      version: {{ .Values.deployments.nginxService.configuration.chart.version }}
+      values: |
+        service:
+          type: ClusterIP
+        serverBlock: |-
+          server {
+            listen 0.0.0.0:8080;
+            add_header Content-Type text/html;
+            location / {
+              return 200 "hello World! Phase1 nginx chart release running";
+            }
+          }

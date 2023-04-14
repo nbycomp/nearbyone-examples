@@ -18,7 +18,7 @@ spec:
       chart: nginx
       repo:
         url: https://charts.bitnami.com/bitnami
-      version: 11.1.5
+      version: 13.2.33
       values: |
         service:
           type: NodePort

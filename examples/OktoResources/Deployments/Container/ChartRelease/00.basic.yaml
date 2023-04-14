@@ -10,7 +10,7 @@ spec:
   k8sClusterName: e40990f8-8f55-4d02-90d0-462c48434286
   repo:
     url: https://charts.bitnami.com/bitnami
-  version: 11.1.5
+  version: 13.2.33
   values: |
     service:
       type: NodePort

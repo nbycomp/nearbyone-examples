@@ -4,17 +4,31 @@
   - Deployments:
     - Container environments:
       - ChartRelease:
-        - 0.basic.yaml: static target cluster, static deployment
+        - 00.basic.yaml: static target cluster, static deployment
+        - 01.chart-complex-semver.yaml: static target cluster, static deployment with semantic versioning
+        - 02.repo-credentials: pull the repo after credentials authorization
+        - 03.k8sclusterselector.yaml: select the k8sCluster to deploy the ChartRelease
+        - 04.weights-query-selection.yaml: select a cluster after running a weighted query
+        - 05.weights-query-selection-confirmation.yaml: select and confirm a cluster running a weighted query
+        - 06.rollout-strategy.yaml: Schedule ChartRelease rollout strategy
+        - 07.suspended-rollout-strategy.yaml: Suspend ChartRelease rollout strategy
+        - 08.multi-schedule-rollout-strategy.yaml: Schedule multiple rollout strategies
+        - 09.namespace-override.yaml: Override namespace
       - ChartDeployment:
         - 0.basic.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
         - 1.k8sclusterselector.yaml: static target cluster, static deployment. Renders a configuration equivalent to CR 0.basic.yaml.
         - X.kpiplacement.yaml
   - Resource relations:
     - Connection:
-      - 0.basic.yaml
+      - 01.basic.yaml
+      - 02.target.yaml
+      - 03.dashboard-exposed.yaml
     - ConnectionSet:
-      - 0.k8scluster.yaml
-      - 1.chartrelease.yaml
+      - 01.k8scluster.yaml
+      - 02.chartrelease.yaml
+    - ExternalQuery:
+      - 01.externalquery-insecure-value.yaml: execute an external query using insecure value configuration
+      - 02.externalquery-connectionref.yaml: execute an external query using configuration in the referenced connection
 - Blocks:
   - SimpleExample: templating basics
   - ComplexExample: Dependencies among deployments
@@ -22,6 +36,9 @@
   - Telemetry:
     - Simple Telemetry
     - Federated telemetry
+    - ExternalQuery
+      - 00ExternalQuery: Execute an external query and publish its result on the web through a ChartRelease
+      - 01ExternalQueryConnectionRef: Retrieve the address from a referenced connection and executed the external query
   - REST:
     - Simple
     - Advanced

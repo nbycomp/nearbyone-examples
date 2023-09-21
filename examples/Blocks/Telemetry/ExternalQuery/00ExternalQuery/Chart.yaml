@@ -1,0 +1,16 @@
+annotations:
+  displayName: External Query Deployment
+  vendor: Nearby Computing
+apiVersion: v1
+appVersion: "1.0"
+description: This block tests an external query on which is based the deployment of a chartrelease
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
+keywords:
+- demo
+maintainers:
+- email: fulvio.denza@nearbycomputing.com
+  name: Fulvio Denza
+  url: www.nearbycomputing.com
+name: externalquerydepl
+type: application
+version: 0.0.1

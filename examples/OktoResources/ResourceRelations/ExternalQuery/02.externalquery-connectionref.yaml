@@ -1,0 +1,23 @@
+apiVersion: blocks/v1beta1
+kind: ExternalQuery
+metadata:
+  name: external-query
+  namespace: 12345678-9012-3456-7890-123456789012
+spec:
+  prometheus:
+    query: |-
+      nearbyone_test_metrics
+    endpoint:
+      connectionRef:
+        name: connection-ref
+        namespace: default
+  template:
+    metadata:
+      labels:
+        site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+        kind: K8sCluster
+    spec:
+      type: okto.rest/prometheus-config
+      value: |
+        {{`{{ toYaml .Results }}`}}
+  

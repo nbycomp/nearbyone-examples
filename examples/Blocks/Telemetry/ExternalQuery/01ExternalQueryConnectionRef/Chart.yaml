@@ -1,0 +1,14 @@
+annotations:
+  displayName: External Query ConnRef
+  vendor: Nearby Computing
+apiVersion: v2
+appVersion: "1.0"
+description: This block exposes an external query with connection ref
+icon: https://blocklogos.s3.eu-west-1.amazonaws.com/nearbycomputing.png
+maintainers:
+- email: fulvio.denza@nearbycomputing.com
+  name: Fulvio Denza
+  url: www.nearbycomputing.com
+name: externalquery-connref
+type: application
+version: 0.0.1

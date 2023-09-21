@@ -1,0 +1,16 @@
+Block:
+  InstanceId: 12345678-9012-3456-7890-123456789012
+placement:
+  site:
+    label: site01
+appname: sitedepl
+deployments:
+  example:
+    configuration:
+      chart:
+        repo: https://charts.bitnami.com/bitnami
+        version: 13.2.33
+        name: nginx
+config:
+  # This requires a running Prometheus instance
+  address: http://10.113.0.52:31000

@@ -1,0 +1,11 @@
+apiVersion: blocks/v1beta1
+kind: Connection
+metadata:
+  name: {{ .Values.connection.config.name }}
+  namespace: {{ .Values.Block.InstanceId }}
+  labels:
+    site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+    kind: K8sCluster
+spec:
+  type: okto.rest/prometheus-config
+  value: "address: {{ .Values.config.address }}"

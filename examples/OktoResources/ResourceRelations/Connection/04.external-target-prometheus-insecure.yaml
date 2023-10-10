@@ -1,0 +1,20 @@
+apiVersion: blocks/v1beta1
+kind: Connection
+metadata:
+  name: connection-with-external-target
+  namespace: default
+  labels:
+    site.nbycomp.com/{{ .Values.placement.site.label }}: "true"
+    kind: K8sCluster
+spec:
+  externalTarget:
+    prometheus:
+      query: |-
+        (avg by (instance) 
+          (rate(node_cpu_seconds_total{job="node",mode="idle"}[1m])) * 100)
+        > 70
+      endpoint:
+        insecureValue: |
+          address: http://prometheus:9090
+  value: |
+    {{`{{ toYaml .Target }}`}}

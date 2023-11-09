@@ -2,7 +2,7 @@ apiVersion: blocks/v1beta1
 kind: Connection
 metadata:
   name: exposed-dashboard-{{ .Values.Block.InstanceId }}
-  namespace: {{ .Values.Block.InstanceId }}
+  namespace: default
   labels:
     connection.nbycomp.com/kind: URL
     connection.nbycomp.com/category: Dashboard

@@ -1,0 +1,12 @@
+apiVersion: blocks/v1beta1
+kind: Connection
+metadata:
+  name: conn-prom-config
+  namespace: default
+spec:
+  type: okto.rest/prometheus-config
+  value: |
+    address: http://prometheus:9090
+    basicAuth:
+      username: username
+      password: password

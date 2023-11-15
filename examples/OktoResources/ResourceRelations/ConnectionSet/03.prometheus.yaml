@@ -1,0 +1,22 @@
+apiVersion: blocks/v1beta1
+kind: ConnectionSet
+metadata:
+  name: externaltarget-cs
+spec:
+  externalTargetList:
+    prometheus:
+      query: |-
+        nearbyone_test_metrics
+      endpoint:
+        connectionRef:
+          name: conn-prom-config
+          namespace: default
+      timeSeriesListSelector:
+        limit: 3
+        required: 1
+        matchLabels:
+          __name__: nearbyone_test_metrics
+  template:
+    spec:
+      value: |
+        {{`{{ toYaml .Target }}`}}
